@@ -287,18 +287,18 @@ class Channel:
         return self._playlists
 
     def __str__(self):
-        head = (f'Channel: {self.id}  ->  {self.title}{os.linesep}'
+        head = (f'  Channel: {self.id}  ->  {self.title}{os.linesep}'
                 f'   {self.country}{os.linesep}'
                 f'   created  : {self.published_at.split("T")[0]} ({self.age_days} days){os.linesep}'
                 f'   videos   : {self.video_count}{os.linesep}'
                 f'   subs     : {self.subscriber_count}{os.linesep}'
                 f'   subs/day : {self.subs_per_day}{os.linesep}'
                 f'{os.linesep}'
-                f'   Uploads:{os.linesep}'
-                f'{self.uploads_pl}'
+                f'  Uploads:{os.linesep}'
+                f'   {self.uploads_pl}'
                 f'{os.linesep}'
-                f'   Playlists:')
-        lists = os.linesep.join([f'{plist[0]}  (cr:{plist[1].split("T")[0]})  ->  {plist[2]}' for plist in self.playlists])
+                f'  Playlists:')
+        lists = os.linesep.join([f'   {plist[0]}  (cr:{plist[1].split("T")[0]})  ->  {plist[2]}' for plist in self.playlists])
         return os.linesep.join([head, lists])
 
 
@@ -356,7 +356,8 @@ def serve_channel_stats(youtube_, ch_id_: str):
 
 
 if __name__ == '__main__':
-    
+
+    print()
     # ----------------------------------------------------------------------------------
     parser = argparse.ArgumentParser(description='Basic statistics of a YouTube video(s)/playlist(s)/channel(s).')
 
@@ -402,3 +403,5 @@ if __name__ == '__main__':
     if arg_channels:
         for ch_id in arg_channels:
             serve_channel_stats(youtube, ch_id)
+
+    print()
