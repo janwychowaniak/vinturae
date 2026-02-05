@@ -31,15 +31,13 @@ class VideoStats:
 
     def __init__(self, published_at: str,
                        comments: str,
-                       favorites: str,
                        likes: str,
                        views: str):
 
         self.published_at = published_at
-        self.comments = int(comments)
-        self.favorites = int(favorites)
-        self.likes = int(likes)
-        self.views = int(views)
+        self.comments = int(comments) if comments else None
+        self.likes = int(likes) if likes else None
+        self.views = int(views) if views else None
 
         self._age_days = None
 
@@ -64,44 +62,67 @@ class VideoStats:
     @property
     def views_per_day(self):
         if not self._views_per_day:
-            self._views_per_day = round(self.views / self.age_days)
+            if self.views is None:
+                self._views_per_day = None
+            else:
+                self._views_per_day = round(self.views / self.age_days) if self.age_days > 0 else None
         return self._views_per_day
 
     @property
     def likes_per_day(self):
         if not self._likes_per_day:
-            self._likes_per_day = round(self.likes / self.age_days)
+            if self.likes is None:
+                self._likes_per_day = None
+            else:
+                self._likes_per_day = round(self.likes / self.age_days) if self.age_days > 0 else None
         return self._likes_per_day
 
     @property
     def comments_per_day(self):
         if not self._comments_per_day:
-            self._comments_per_day = round(self.comments / self.age_days)
+            if self.comments is None:
+                self._comments_per_day = None
+            else:
+                self._comments_per_day = round(self.comments / self.age_days) if self.age_days > 0 else None
         return self._comments_per_day
 
     #
     @property
     def likestoviews_ratio(self):
         if not self._likestoviews_ratio:
-            self._likestoviews_ratio = self.likes / self.views
+            if self.likes is None or self.views is None or self.views == 0:
+                self._likestoviews_ratio = None
+            else:
+                self._likestoviews_ratio = self.likes / self.views
         return self._likestoviews_ratio
 
     @property
     def commentstoviews_ratio(self):
         if not self._commentstoviews_ratio:
-            self._commentstoviews_ratio = self.comments / self.views
+            if self.comments is None or self.views is None or self.views == 0:
+                self._commentstoviews_ratio = None
+            else:
+                self._commentstoviews_ratio = self.comments / self.views
         return self._commentstoviews_ratio
 
     @property
     def viewstolikes_ratio(self):
         if not self._viewstolikes_ratio:
-            self._viewstolikes_ratio = 1 / self.likestoviews_ratio
+            ratio = self.likestoviews_ratio
+            if ratio is None or ratio == 0:
+                self._viewstolikes_ratio = None
+            else:
+                self._viewstolikes_ratio = 1 / ratio
         return self._viewstolikes_ratio
 
     @property
     def viewstocomments_ratio(self):
         if not self._viewstocomments_ratio:
-            self._viewstocomments_ratio = 1 / self.commentstoviews_ratio
+            ratio = self.commentstoviews_ratio
+            if ratio is None or ratio == 0:
+                self._viewstocomments_ratio = None
+            else:
+                self._viewstocomments_ratio = 1 / ratio
         return self._viewstocomments_ratio
 
 
@@ -113,10 +134,9 @@ class Video:
         self.title = viddata_item['snippet']['title']
 
         self.stats = VideoStats(published_at=viddata_item['snippet']['publishedAt'],
-                                comments=viddata_item['statistics']['commentCount'],
-                                favorites=viddata_item['statistics']['favoriteCount'],
-                                likes=viddata_item['statistics']['likeCount'],
-                                views=viddata_item['statistics']['viewCount'])
+                                comments=viddata_item['statistics'].get('commentCount', None),
+                                likes=viddata_item['statistics'].get('likeCount', None),
+                                views=viddata_item['statistics'].get('viewCount', None))
 
 
 
@@ -164,14 +184,14 @@ class VideoStatsFormatter:
             row_items = [video.id.rjust(self.col_lens[0]),
                          str(video.stats.published_at).split('T')[0].rjust(self.col_lens[1]),
                          str(video.stats.age_days).rjust(self.col_lens[2]),
-                         str(video.stats.views).rjust(self.col_lens[3]),
-                         str(video.stats.likes).rjust(self.col_lens[4]),
-                         str(video.stats.comments).rjust(self.col_lens[5]),
-                         str(video.stats.views_per_day).rjust(self.col_lens[6]),
-                         str(video.stats.likes_per_day).rjust(self.col_lens[7]),
-                         str(video.stats.comments_per_day).rjust(self.col_lens[8]),
-                         str(int(video.stats.viewstolikes_ratio)).rjust(self.col_lens[9]),
-                         str(int(video.stats.viewstocomments_ratio)).rjust(self.col_lens[10]),
+                         (str(video.stats.views) if video.stats.views is not None else " ").rjust(self.col_lens[3]),
+                         (str(video.stats.likes) if video.stats.likes is not None else " ").rjust(self.col_lens[4]),
+                         (str(video.stats.comments) if video.stats.comments is not None else " ").rjust(self.col_lens[5]),
+                         (str(video.stats.views_per_day) if video.stats.views_per_day is not None else " ").rjust(self.col_lens[6]),
+                         (str(video.stats.likes_per_day) if video.stats.likes_per_day is not None else " ").rjust(self.col_lens[7]),
+                         (str(video.stats.comments_per_day) if video.stats.comments_per_day is not None else " ").rjust(self.col_lens[8]),
+                         (str(int(video.stats.viewstolikes_ratio)) if video.stats.viewstolikes_ratio is not None else " ").rjust(self.col_lens[9]),
+                         (str(int(video.stats.viewstocomments_ratio)) if video.stats.viewstocomments_ratio is not None else " ").rjust(self.col_lens[10]),
                          video.title.rjust(self.col_lens[11])]
             print(type(self)._row_template_.format(*row_items))
 
