@@ -362,7 +362,14 @@ def serve_videos_stats(youtube_, vid_ids_: list):
 
 
 def serve_playlist_stats(youtube_, pl_id_: str):
-    playlist_data = PlaylistFetcher(youtube_.api).fetch(pl_id_)
+    try:
+        playlist_data = PlaylistFetcher(youtube_.api).fetch(pl_id_)
+    except googleapiclient.errors.HttpError as e:
+        if e.resp.status == 404:
+            print(f"Error: Playlist '{pl_id_}' not found.")
+        else:
+            print(f"Error fetching playlist '{pl_id_}': {e}")
+        return
     playlist_ = Playlist(*playlist_data)
     video_data = VideoDataFetcher(youtube_.api).fetch(playlist_.videos)
 
@@ -373,7 +380,14 @@ def serve_playlist_stats(youtube_, pl_id_: str):
 
 
 def serve_channel_stats(youtube_, ch_id_: str):
-    channel_data = ChannelFetcher(youtube_.api).fetch(ch_id_)
+    try:
+        channel_data = ChannelFetcher(youtube_.api).fetch(ch_id_)
+    except googleapiclient.errors.HttpError as e:
+        if e.resp.status == 404:
+            print(f"Error: Channel '{ch_id_}' not found.")
+        else:
+            print(f"Error fetching channel '{ch_id_}': {e}")
+        return
     print(Channel(*channel_data))
     print()
 
