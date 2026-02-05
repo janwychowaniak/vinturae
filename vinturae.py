@@ -140,15 +140,14 @@ class Video:
 
 class VideoDataFetcher:
 
-    _part_ = "snippet,statistics"
-
-    def __init__(self, yt_api):
+    def __init__(self, yt_api, part="snippet,statistics"):
         self.yt_api = yt_api
+        self._part = part
 
     def fetch(self, video_ids: list):
         # [https://developers.google.com/youtube/v3/docs/videos/list]
         videos_request = self.yt_api.videos().list(
-            part=type(self)._part_,
+            part=self._part,
             # maxResults=50,  # "not supported for use in conjunction with id"  # TODO no to przetestować na >50
             id=video_ids
         )
