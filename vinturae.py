@@ -1,6 +1,6 @@
 import os
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 
 import googleapiclient.discovery
 import googleapiclient.errors
@@ -27,8 +27,6 @@ class YouTube:
 
 class VideoStats:
 
-    _date_format_ = '%Y-%m-%dT%H:%M:%SZ'
-
     def __init__(self, published_at: str,
                        comments: str,
                        likes: str,
@@ -53,8 +51,8 @@ class VideoStats:
     @property
     def age_days(self):
         if not self._age_days:
-            pa_dt = datetime.strptime(self.published_at, type(self)._date_format_)
-            ago_td = datetime.now() - pa_dt
+            pa_dt = datetime.fromisoformat(self.published_at.replace('Z', '+00:00'))
+            ago_td = datetime.now(timezone.utc) - pa_dt
             self._age_days = ago_td.days
         return self._age_days
 
@@ -261,8 +259,6 @@ class PlaylistFetcher:
 
 class Channel:
 
-    _date_format_ = '%Y-%m-%dT%H:%M:%SZ'
-
     def __init__(self, chdata_elem, chcontent_elem):
         self.chcontent_elem = chcontent_elem
 
@@ -285,8 +281,8 @@ class Channel:
     @property
     def age_days(self):
         if not self._age_days:
-            pa_dt = datetime.strptime(self.published_at, type(self)._date_format_)
-            ago_td = datetime.now() - pa_dt
+            pa_dt = datetime.fromisoformat(self.published_at.replace('Z', '+00:00'))
+            ago_td = datetime.now(timezone.utc) - pa_dt
             self._age_days = ago_td.days
         return self._age_days
 
