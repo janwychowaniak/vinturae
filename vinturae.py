@@ -5,23 +5,21 @@ from datetime import datetime
 import googleapiclient.discovery
 import googleapiclient.errors
 
-from config import get_config
+from dotenv import load_dotenv
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class YouTube:
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, developer_key):
+        self.developer_key = developer_key
         self._api = None
 
     @property
     def api(self):
         if not self._api:
-            self._api = googleapiclient.discovery.build(self.config.api_service_name,  # TODO co to jest?
-                                                        self.config.api_version,
-                                                        developerKey=self.config.developer_key)
+            self._api = googleapiclient.discovery.build("youtube", "v3", developerKey=self.developer_key)
         return self._api
 
 
@@ -396,11 +394,12 @@ if __name__ == '__main__':
         parser.error('No resource requested, add -v or -p or -c (or -h for more info).')
     # ----------------------------------------------------------------------------------
 
-    CONFIG_FILE = 'config.ini'
-    # APP_CONFIG = get_config(CONFIG_FILE)
+    load_dotenv()
+    api_key = os.getenv('VINTURAE_YOUTUBE_API_KEY')
+    if not api_key:
+        raise ValueError("VINTURAE_YOUTUBE_API_KEY not found in .env file or environment variables. Please set it.")
 
-
-    youtube = YouTube(get_config(CONFIG_FILE))
+    youtube = YouTube(api_key)
 
     if arg_videos:
         serve_videos_stats(youtube, arg_videos)
