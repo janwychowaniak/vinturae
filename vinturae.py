@@ -142,22 +142,19 @@ class VideoDataFetcher:
 
 class VideoStatsFormatter:
 
-    _col_labels_ = ('id         ',  # -
-                    'publishedAt',
-                    'ageInDays',  # |
-                    'viewCount',
-                    'likeCount',
-                    'commCount',
-                    'favCount',  # |
-                    'views/day',
-                    'likes/day',
-                    'comms/day',  # |
-                    'likes/views',
-                    'comms/views',
-                    'views/likes',
-                    'views/comms',  # ->
-                    'title')
-    _row_template_ = '{}  -  {}   {}  |  {}   {}   {}   {}  |  {}   {}   {}  |  {}   {}   {}   {}  ->  {}'
+    _col_labels_ = ('[ID]       ',  # -
+                    'publAtDate',
+                    'daysOld',  # |
+                    'viewsCt',
+                    'likesCt',
+                    'commsCt',  # |
+                    'views/d',
+                    'likes/d',
+                    'comms/d',  # |
+                    'views4like',
+                    'views4comm',  # ->
+                    '[TITLE]')
+    _row_template_ = '  {}  -  {}  {}  |  {}   {}   {}  |  {}   {}   {}  |  {}   {}  ->  {}'
 
     def __init__(self, videos: list):
         self.videos = videos
@@ -172,15 +169,12 @@ class VideoStatsFormatter:
                          str(video.stats.views).rjust(self.col_lens[3]),
                          str(video.stats.likes).rjust(self.col_lens[4]),
                          str(video.stats.comments).rjust(self.col_lens[5]),
-                         str(video.stats.favorites).rjust(self.col_lens[6]),
-                         str(video.stats.views_per_day).rjust(self.col_lens[7]),
-                         str(video.stats.likes_per_day).rjust(self.col_lens[8]),
-                         str(video.stats.comments_per_day).rjust(self.col_lens[9]),
-                         str(round(video.stats.likestoviews_ratio, 6)).rjust(self.col_lens[10]),
-                         str(round(video.stats.commentstoviews_ratio, 6)).rjust(self.col_lens[11]),
-                         str(int(video.stats.viewstolikes_ratio)).rjust(self.col_lens[12]),
-                         str(int(video.stats.viewstocomments_ratio)).rjust(self.col_lens[13]),
-                         video.title.rjust(self.col_lens[14])]
+                         str(video.stats.views_per_day).rjust(self.col_lens[6]),
+                         str(video.stats.likes_per_day).rjust(self.col_lens[7]),
+                         str(video.stats.comments_per_day).rjust(self.col_lens[8]),
+                         str(int(video.stats.viewstolikes_ratio)).rjust(self.col_lens[9]),
+                         str(int(video.stats.viewstocomments_ratio)).rjust(self.col_lens[10]),
+                         video.title.rjust(self.col_lens[11])]
             print(type(self)._row_template_.format(*row_items))
 
 
@@ -208,8 +202,8 @@ class Playlist:
         return self._videos
 
     def __str__(self):
-        return (f'Playlist: {self.id}  ->  {self.title}{os.linesep}'
-                f'   [from: {self.channelId} / {self.channelTitle}]')
+        return (f'PLAYLIST: {self.id}  ->  "{self.title}"{os.linesep}'
+                f'[channel: {self.channelId} / "{self.channelTitle}"]')
 
 
 class PlaylistFetcher:
@@ -300,7 +294,7 @@ class Channel:
         return self._playlists
 
     def __str__(self):
-        head = (f'  Channel: /{self.country}/ {self.id}  ->  "{self.title}"{os.linesep}'
+        head = (f'  CHANNEL: /{self.country.lower()}/ {self.id}  ->  "{self.title}"{os.linesep}'
                 f'   since : {self.published_at.split("T")[0]} ({self.age_days} days ago){os.linesep}'
                 f'   vids  : {self.video_count}        ({self.videos_per_month}/month){os.linesep}'
                 f'   subs  : {self.subscriber_count}     ({self.subs_per_day}/day){os.linesep}'
@@ -358,7 +352,7 @@ def serve_playlist_stats(youtube_, pl_id_: str):
     video_data = VideoDataFetcher(youtube_.api).fetch(playlist_.videos)
 
     print(playlist_)
-    print(f'{os.linesep}   Videos:')
+    print(f'{os.linesep}Videos:')
     VideoStatsFormatter([Video(videodata_item) for videodata_item in video_data['items']]).print()
 
 
