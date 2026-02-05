@@ -8,6 +8,7 @@ import googleapiclient.errors
 from config import get_config
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class YouTube:
 
@@ -24,6 +25,7 @@ class YouTube:
         return self._api
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class VideoStats:
 
@@ -182,6 +184,8 @@ class VideoStatsFormatter:
             print(type(self)._row_template_.format(*row_items))
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 class Playlist:
 
     def __init__(self, pldata_elem, plcontent_elem):
@@ -241,6 +245,8 @@ class PlaylistFetcher:
         return plbdata_response['items'][0], plitems_response  # unwrap first data item
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 class Channel:
 
     _date_format_ = '%Y-%m-%dT%H:%M:%SZ'
@@ -260,6 +266,7 @@ class Channel:
 
         self._age_days = None
         self._subs_per_day = None
+        self._videos_per_month = None
 
         self._playlists = []
 
@@ -278,6 +285,12 @@ class Channel:
         return self._subs_per_day
 
     @property
+    def videos_per_month(self):
+        if not self._videos_per_month:
+            self._videos_per_month = round(self.video_count / (self.age_days / 30))
+        return self._videos_per_month
+
+    @property
     def playlists(self):
         if not self._playlists:
             for content_item in self.chcontent_elem['items']:
@@ -287,15 +300,12 @@ class Channel:
         return self._playlists
 
     def __str__(self):
-        head = (f'  Channel: {self.id}  ->  {self.title}{os.linesep}'
-                f'   {self.country}{os.linesep}'
-                f'   created  : {self.published_at.split("T")[0]} ({self.age_days} days){os.linesep}'
-                f'   videos   : {self.video_count}{os.linesep}'
-                f'   subs     : {self.subscriber_count}{os.linesep}'
-                f'   subs/day : {self.subs_per_day}{os.linesep}'
+        head = (f'  Channel: /{self.country}/ {self.id}  ->  "{self.title}"{os.linesep}'
+                f'   since : {self.published_at.split("T")[0]} ({self.age_days} days ago){os.linesep}'
+                f'   vids  : {self.video_count}        ({self.videos_per_month}/month){os.linesep}'
+                f'   subs  : {self.subscriber_count}     ({self.subs_per_day}/day){os.linesep}'
                 f'{os.linesep}'
-                f'  Uploads:{os.linesep}'
-                f'   {self.uploads_pl}'
+                f'  Uploads:   {self.uploads_pl}'
                 f'{os.linesep}'
                 f'  Playlists:')
         lists = os.linesep.join([f'   {plist[0]}  (cr:{plist[1].split("T")[0]})  ->  {plist[2]}' for plist in self.playlists])
@@ -335,6 +345,8 @@ class ChannelFetcher:
         return chbdata_response['items'][0], chitems_response  # unwrap first data item
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 def serve_videos_stats(youtube_, vid_ids_: list):
     video_data = VideoDataFetcher(youtube_.api).fetch(vid_ids_)
     VideoStatsFormatter([Video(videodata_item) for videodata_item in video_data['items']]).print()
@@ -354,6 +366,9 @@ def serve_channel_stats(youtube_, ch_id_: str):
     channel_data = ChannelFetcher(youtube_.api).fetch(ch_id_)
     print(Channel(*channel_data))
 
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if __name__ == '__main__':
 
