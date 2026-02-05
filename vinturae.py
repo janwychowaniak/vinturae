@@ -152,7 +152,7 @@ class VideoStatsFormatter:
                     'views4like',
                     'views4comm',  # ->
                     '[TITLE]')
-    _row_template_ = '  {}  -  {}  {}  |  {}   {}   {}  |  {}   {}   {}  |  {}   {}  ->  {}'
+    _row_template_ = '    {}  -  {}  {}  |  {}   {}   {}  |  {}   {}   {}  |  {}   {}  ->  {}'
 
     def __init__(self, videos: list):
         self.videos = videos
@@ -200,8 +200,8 @@ class Playlist:
         return self._videos
 
     def __str__(self):
-        return (f'PLAYLIST: {self.id}  ->  "{self.title}"{os.linesep}'
-                f'[channel: {self.channelId} / "{self.channelTitle}"]')
+        return (f'  PLAYLIST: {self.id}  ->  "{self.title}"{os.linesep}'
+                f'  [channel: {self.channelId} / "{self.channelTitle}"]')
 
 
 class PlaylistFetcher:
@@ -342,6 +342,7 @@ class ChannelFetcher:
 def serve_videos_stats(youtube_, vid_ids_: list):
     video_data = VideoDataFetcher(youtube_.api).fetch(vid_ids_)
     VideoStatsFormatter([Video(videodata_item) for videodata_item in video_data['items']]).print()
+    print()
 
 
 def serve_playlist_stats(youtube_, pl_id_: str):
@@ -350,13 +351,15 @@ def serve_playlist_stats(youtube_, pl_id_: str):
     video_data = VideoDataFetcher(youtube_.api).fetch(playlist_.videos)
 
     print(playlist_)
-    print(f'{os.linesep}Videos:')
+    print(f'{os.linesep}  Videos:')
     VideoStatsFormatter([Video(videodata_item) for videodata_item in video_data['items']]).print()
+    print()
 
 
 def serve_channel_stats(youtube_, ch_id_: str):
     channel_data = ChannelFetcher(youtube_.api).fetch(ch_id_)
     print(Channel(*channel_data))
+    print()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -411,5 +414,3 @@ if __name__ == '__main__':
     if arg_channels:
         for ch_id in arg_channels:
             serve_channel_stats(youtube, ch_id)
-
-    print()
