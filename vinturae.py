@@ -294,8 +294,8 @@ class Channel:
     def __str__(self):
         head = (f'  CHANNEL: /{self.country.lower()}/ {self.id}  ->  "{self.title}"{os.linesep}'
                 f'   since : {self.published_at.split("T")[0]} ({self.age_days} days ago){os.linesep}'
-                f'   vids  : {self.video_count}        ({self.videos_per_month}/month){os.linesep}'
-                f'   subs  : {self.subscriber_count}     ({self.subs_per_day}/day){os.linesep}'
+                f'   vids  : {str(self.video_count).ljust(10)} ({self.videos_per_month}/month){os.linesep}'
+                f'   subs  : {str(self.subscriber_count).ljust(10)} ({self.subs_per_day}/day){os.linesep}'
                 f'{os.linesep}'
                 f'  Uploads:   {self.uploads_pl}'
                 f'{os.linesep}'
