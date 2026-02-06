@@ -1,5 +1,6 @@
 import os
 import argparse
+import re
 from datetime import datetime, timezone
 
 import googleapiclient.discovery
@@ -141,6 +142,22 @@ class Video:
                                 likes=viddata_item['statistics'].get('likeCount', None),
                                 views=viddata_item['statistics'].get('viewCount', None))
 
+    @property
+    def formatted_duration(self):
+        if not self.duration:
+            return ""
+        match = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', self.duration)
+        if not match:
+            return self.duration  # fallback
+        hours, minutes, seconds = match.groups()
+        hours = int(hours) if hours else 0
+        minutes = int(minutes) if minutes else 0
+        seconds = int(seconds) if seconds else 0
+        if hours > 0:
+            return f"{hours}:{minutes:02d}:{seconds:02d}"
+        else:
+            return f"{minutes}:{seconds:02d}"
+
 
 
 class VideoDataFetcher:
@@ -188,7 +205,7 @@ class VideoStatsFormatter:
             row_items = [video.id.rjust(self.col_lens[0]),
                          str(video.stats.published_at).split('T')[0].rjust(self.col_lens[1]),
                          f"{video.default_language}/{video.default_audio_language}".rjust(self.col_lens[2]),
-                         (video.duration if video.duration else " ").rjust(self.col_lens[3]),
+                         (video.formatted_duration if video.formatted_duration else " ").rjust(self.col_lens[3]),
                          str(video.stats.age_days).rjust(self.col_lens[4]),
                          (str(video.stats.views) if video.stats.views is not None else " ").rjust(self.col_lens[5]),
                          (str(video.stats.likes) if video.stats.likes is not None else " ").rjust(self.col_lens[6]),
