@@ -134,6 +134,8 @@ class Video:
         self.default_language = viddata_item['snippet'].get('defaultLanguage', '')
         self.default_audio_language = viddata_item['snippet'].get('defaultAudioLanguage', '')
 
+        self.duration = viddata_item['contentDetails'].get('duration', '')
+
         self.stats = VideoStats(published_at=viddata_item['snippet']['publishedAt'],
                                 comments=viddata_item['statistics'].get('commentCount', None),
                                 likes=viddata_item['statistics'].get('likeCount', None),
@@ -143,7 +145,7 @@ class Video:
 
 class VideoDataFetcher:
 
-    def __init__(self, yt_api, part="snippet,statistics"):
+    def __init__(self, yt_api, part="contentDetails,snippet,statistics"):
         self.yt_api = yt_api
         self._part = part
 
@@ -163,6 +165,7 @@ class VideoStatsFormatter:
     _col_labels_ = ('[ID]       ',  # -
                     'publAtDate',
                     'language',
+                    'duration',
                     'daysOld',  # |
                     'viewsCt',
                     'likesCt',
@@ -173,7 +176,7 @@ class VideoStatsFormatter:
                     'views4like',
                     'views4comm',  # ->
                     '[TITLE]')
-    _row_template_ = '    {}  -  {}  {}  {}  |  {}   {}   {}  |  {}   {}   {}  |  {}   {}  ->  {}'
+    _row_template_ = '    {}  -  {}  {}  {}  {}  |  {}   {}   {}  |  {}   {}   {}  |  {}   {}  ->  {}'
 
     def __init__(self, videos: list):
         self.videos = videos
@@ -185,16 +188,17 @@ class VideoStatsFormatter:
             row_items = [video.id.rjust(self.col_lens[0]),
                          str(video.stats.published_at).split('T')[0].rjust(self.col_lens[1]),
                          f"{video.default_language}/{video.default_audio_language}".rjust(self.col_lens[2]),
-                         str(video.stats.age_days).rjust(self.col_lens[3]),
-                         (str(video.stats.views) if video.stats.views is not None else " ").rjust(self.col_lens[4]),
-                         (str(video.stats.likes) if video.stats.likes is not None else " ").rjust(self.col_lens[5]),
-                         (str(video.stats.comments) if video.stats.comments is not None else " ").rjust(self.col_lens[6]),
-                         (str(video.stats.views_per_day) if video.stats.views_per_day is not None else " ").rjust(self.col_lens[7]),
-                         (str(video.stats.likes_per_day) if video.stats.likes_per_day is not None else " ").rjust(self.col_lens[8]),
-                         (str(video.stats.comments_per_day) if video.stats.comments_per_day is not None else " ").rjust(self.col_lens[9]),
-                         (str(int(video.stats.viewstolikes_ratio)) if video.stats.viewstolikes_ratio is not None else " ").rjust(self.col_lens[10]),
-                         (str(int(video.stats.viewstocomments_ratio)) if video.stats.viewstocomments_ratio is not None else " ").rjust(self.col_lens[11]),
-                         video.title.rjust(self.col_lens[12])]
+                         (video.duration if video.duration else " ").rjust(self.col_lens[3]),
+                         str(video.stats.age_days).rjust(self.col_lens[4]),
+                         (str(video.stats.views) if video.stats.views is not None else " ").rjust(self.col_lens[5]),
+                         (str(video.stats.likes) if video.stats.likes is not None else " ").rjust(self.col_lens[6]),
+                         (str(video.stats.comments) if video.stats.comments is not None else " ").rjust(self.col_lens[7]),
+                         (str(video.stats.views_per_day) if video.stats.views_per_day is not None else " ").rjust(self.col_lens[8]),
+                         (str(video.stats.likes_per_day) if video.stats.likes_per_day is not None else " ").rjust(self.col_lens[9]),
+                         (str(video.stats.comments_per_day) if video.stats.comments_per_day is not None else " ").rjust(self.col_lens[10]),
+                         (str(int(video.stats.viewstolikes_ratio)) if video.stats.viewstolikes_ratio is not None else " ").rjust(self.col_lens[11]),
+                         (str(int(video.stats.viewstocomments_ratio)) if video.stats.viewstocomments_ratio is not None else " ").rjust(self.col_lens[12]),
+                         video.title.rjust(self.col_lens[13])]
             print(type(self)._row_template_.format(*row_items))
 
 
