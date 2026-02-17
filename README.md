@@ -9,6 +9,7 @@ A command-line tool to fetch and display statistics for YouTube videos, playlist
 - Get channel overviews with subscriber counts, video counts, and related playlists.
 - Handles optional fields gracefully (e.g., missing statistics or language info).
 - Formatted output for easy reading.
+- Optional LLM-powered person name extraction from video descriptions (via OpenRouter).
 
 ## Installation
 
@@ -34,6 +35,12 @@ A command-line tool to fetch and display statistics for YouTube videos, playlist
      ```
      export VINTURAE_YOUTUBE_API_KEY=your_api_key_here
      ```
+
+5. (Optional) To enable person name extraction from video descriptions, add an [OpenRouter](https://openrouter.ai/) API key:
+   ```
+   VINTURAE_OPENROUTER_API_KEY=your_api_key_here
+   VINTURAE_OPENROUTER_MODEL=anthropic/claude-sonnet-4  # optional, this is the default
+   ```
 
 ## Usage
 

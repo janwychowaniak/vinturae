@@ -23,10 +23,11 @@ No test suite or linter is configured.
 
 ## Architecture
 
-All code lives in `vinturae.py` (~470 lines). The structure follows a pattern of paired Fetcher + Domain classes per YouTube resource type:
+All code lives in `vinturae.py` (~520 lines). The structure follows a pattern of paired Fetcher + Domain classes per YouTube resource type:
 
 - **YouTube** — Lazy-initialized API client wrapper
 - **Video / VideoStats / VideoDataFetcher / VideoStatsFormatter** — Fetch video data, compute per-day metrics and engagement ratios, format as aligned table
+- **PersonExtractor** — Sends video descriptions to an LLM via OpenRouter to extract person names (opt-in, requires `VINTURAE_OPENROUTER_API_KEY`)
 - **Playlist / PlaylistFetcher** — Fetch playlist metadata + video IDs (pagination capped at 50)
 - **Channel / ChannelFetcher** — Fetch channel stats, uploads playlist, and related playlists
 
@@ -40,4 +41,5 @@ Data flow: CLI args → Fetcher (API call) → Domain object (parsed data + comp
 - Optional API fields (commentCount, likeCount, language) are handled with `None` propagation throughout
 - ISO 8601 durations are parsed with regex in `Video.formatted_duration`
 - API key loaded via `python-dotenv` from `.env` file (variable: `VINTURAE_YOUTUBE_API_KEY`)
-- Dependencies: `google-api-python-client`, `python-dotenv`
+- Optional OpenRouter integration: `VINTURAE_OPENROUTER_API_KEY` enables person name extraction from descriptions; `VINTURAE_OPENROUTER_MODEL` overrides the default model (`anthropic/claude-sonnet-4`)
+- Dependencies: `google-api-python-client`, `python-dotenv`, `openrouter`
