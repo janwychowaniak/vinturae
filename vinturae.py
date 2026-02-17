@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 import googleapiclient.discovery
 import googleapiclient.errors
+from openrouter import OpenRouter
 
 from dotenv import load_dotenv
 
@@ -131,6 +132,8 @@ class Video:
     def __init__(self, viddata_item: dict):
         self.id = viddata_item['id']
         self.title = viddata_item['snippet']['title']
+        self.description = viddata_item['snippet'].get('description', '')
+        self.people = ''
 
         self.default_language = viddata_item['snippet'].get('defaultLanguage', '')
         self.default_audio_language = viddata_item['snippet'].get('defaultAudioLanguage', '')
@@ -177,6 +180,42 @@ class VideoDataFetcher:
 
 
 
+class PersonExtractor:
+
+    _system_prompt_ = (
+        "You extract person names from YouTube video descriptions. "
+        "Return ONLY a comma-separated list of person names or pseudonyms mentioned. "
+        "If no person names are found, return exactly NONE. "
+        "Do not include channel names, brand names, or organization names — only people. "
+        "Do not add any explanation or commentary."
+    )
+
+    def __init__(self, api_key, model='anthropic/claude-sonnet-4'):
+        self._client = OpenRouter(api_key=api_key)
+        self._model = model
+
+    def extract(self, description):
+        if not description.strip():
+            return ''
+        try:
+            response = self._client.chat.send(
+                model=self._model,
+                messages=[
+                    {"role": "system", "content": type(self)._system_prompt_},
+                    {"role": "user", "content": description}
+                ]
+            )
+            result = response.choices[0].message.content.strip()
+            return '' if result == 'NONE' else result
+        except Exception as e:
+            print(f"  [PersonExtractor warning: {e}]")
+            return ''
+
+    def extract_for_videos(self, videos):
+        for video in videos:
+            video.people = self.extract(video.description)
+
+
 class VideoStatsFormatter:
 
     _col_labels_ = ('[ID]       ',  # -
@@ -215,7 +254,7 @@ class VideoStatsFormatter:
                          (str(video.stats.comments_per_day) if video.stats.comments_per_day is not None else " ").rjust(self.col_lens[10]),
                          (str(int(video.stats.viewstolikes_ratio)) if video.stats.viewstolikes_ratio is not None else " ").rjust(self.col_lens[11]),
                          (str(int(video.stats.viewstocomments_ratio)) if video.stats.viewstocomments_ratio is not None else " ").rjust(self.col_lens[12]),
-                         video.title.rjust(self.col_lens[13])]
+                         (video.title + (f'  | {video.people}' if video.people else '')).rjust(self.col_lens[13])]
             print(type(self)._row_template_.format(*row_items))
 
 
@@ -380,13 +419,16 @@ class ChannelFetcher:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def serve_videos_stats(youtube_, vid_ids_: list):
+def serve_videos_stats(youtube_, vid_ids_: list, person_extractor=None):
     video_data = VideoDataFetcher(youtube_.api).fetch(vid_ids_)
-    VideoStatsFormatter([Video(videodata_item) for videodata_item in video_data['items']]).print()
+    videos = [Video(videodata_item) for videodata_item in video_data['items']]
+    if person_extractor:
+        person_extractor.extract_for_videos(videos)
+    VideoStatsFormatter(videos).print()
     print()
 
 
-def serve_playlist_stats(youtube_, pl_id_: str):
+def serve_playlist_stats(youtube_, pl_id_: str, person_extractor=None):
     try:
         playlist_data = PlaylistFetcher(youtube_.api).fetch(pl_id_)
     except googleapiclient.errors.HttpError as e:
@@ -400,7 +442,10 @@ def serve_playlist_stats(youtube_, pl_id_: str):
 
     print(playlist_)
     print(f'{os.linesep}  Videos:')
-    VideoStatsFormatter([Video(videodata_item) for videodata_item in video_data['items']]).print()
+    videos = [Video(videodata_item) for videodata_item in video_data['items']]
+    if person_extractor:
+        person_extractor.extract_for_videos(videos)
+    VideoStatsFormatter(videos).print()
     print()
 
 
@@ -459,12 +504,16 @@ if __name__ == '__main__':
 
     youtube = YouTube(api_key)
 
+    openrouter_api_key = os.getenv('VINTURAE_OPENROUTER_API_KEY')
+    openrouter_model = os.getenv('VINTURAE_OPENROUTER_MODEL', 'anthropic/claude-sonnet-4')
+    person_extractor = PersonExtractor(openrouter_api_key, openrouter_model) if openrouter_api_key else None
+
     if arg_videos:
-        serve_videos_stats(youtube, arg_videos)
+        serve_videos_stats(youtube, arg_videos, person_extractor)
 
     if arg_playlists:
         for pl_id in arg_playlists:
-            serve_playlist_stats(youtube, pl_id)
+            serve_playlist_stats(youtube, pl_id, person_extractor)
 
     if arg_channels:
         for ch_id in arg_channels:
