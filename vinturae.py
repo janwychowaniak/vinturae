@@ -171,12 +171,16 @@ class VideoDataFetcher:
 
     def fetch(self, video_ids: list):
         # [https://developers.google.com/youtube/v3/docs/videos/list]
-        videos_request = self.yt_api.videos().list(
-            part=self._part,
-            # maxResults=50,  # "not supported for use in conjunction with id"  # TODO no to przetestować na >50
-            id=video_ids
-        )
-        return videos_request.execute()
+        # maxResults is not supported with the `id` param, so batch into chunks of 50
+        all_items = []
+        for i in range(0, len(video_ids), 50):
+            chunk = video_ids[i:i + 50]
+            response = self.yt_api.videos().list(
+                part=self._part,
+                id=chunk
+            ).execute()
+            all_items.extend(response.get('items', []))
+        return {'items': all_items}
 
 
 
@@ -294,28 +298,38 @@ class PlaylistFetcher:
     def __init__(self, yt_api):
         self.yt_api = yt_api
 
-    def fetch(self, playlist_id: str):
+    def fetch(self, playlist_id: str, max_results=100):
         """
         :param playlist_id: this is required (and assumed) to always be a single playlist ID
+        :param max_results: max number of playlist items to fetch (default 100)
         """
         # base data
         # [https://developers.google.com/youtube/v3/docs/playlists/list]
         plbdata_request = self.yt_api.playlists().list(
             part=type(self)._part_data_,
-            # maxResults=50,  # always one requested
             id=playlist_id
         )
         plbdata_response = plbdata_request.execute()
 
-        # content
+        # content (paginated)
         # [https://developers.google.com/youtube/v3/docs/playlistItems/list]
-        plcontent_request = self.yt_api.playlistItems().list(
-            part=type(self)._part_content_,
-            maxResults=50,  # TODO tu serio mamy takie ograniczenie?
-            playlistId=playlist_id  # only a single ID is accepted
-        )
-        plitems_response = plcontent_request.execute()
+        all_items = []
+        page_token = None
+        while len(all_items) < max_results:
+            page_size = min(50, max_results - len(all_items))
+            plcontent_request = self.yt_api.playlistItems().list(
+                part=type(self)._part_content_,
+                maxResults=page_size,
+                playlistId=playlist_id,
+                **({"pageToken": page_token} if page_token else {})
+            )
+            response = plcontent_request.execute()
+            all_items.extend(response.get('items', []))
+            page_token = response.get('nextPageToken')
+            if not page_token:
+                break
 
+        plitems_response = {'items': all_items}
         return plbdata_response['items'][0], plitems_response  # unwrap first data item
 
 
@@ -392,28 +406,38 @@ class ChannelFetcher:
     def __init__(self, yt_api):
         self.yt_api = yt_api
 
-    def fetch(self, channel_id: str):
+    def fetch(self, channel_id: str, max_results=100):
         """
         :param channel_id: this is required (and assumed) to always be a single channel ID
+        :param max_results: max number of playlists to fetch (default 100)
         """
         # base data
         # [https://developers.google.com/youtube/v3/docs/channels/list]
         chbdata_request = self.yt_api.channels().list(
             part=type(self)._part_data_,
-            # maxResults=50,  # always one requested
             id=channel_id
         )
         chbdata_response = chbdata_request.execute()
 
-        # content
+        # content (paginated)
         # [https://developers.google.com/youtube/v3/docs/playlists/list]
-        chcontent_request = self.yt_api.playlists().list(
-            part=type(self)._part_content_,
-            maxResults=50,  # TODO tu serio mamy takie ograniczenie?
-            channelId=channel_id  # only a single ID is accepted
-        )
-        chitems_response = chcontent_request.execute()
+        all_items = []
+        page_token = None
+        while len(all_items) < max_results:
+            page_size = min(50, max_results - len(all_items))
+            chcontent_request = self.yt_api.playlists().list(
+                part=type(self)._part_content_,
+                maxResults=page_size,
+                channelId=channel_id,
+                **({"pageToken": page_token} if page_token else {})
+            )
+            response = chcontent_request.execute()
+            all_items.extend(response.get('items', []))
+            page_token = response.get('nextPageToken')
+            if not page_token:
+                break
 
+        chitems_response = {'items': all_items}
         return chbdata_response['items'][0], chitems_response  # unwrap first data item
 
 
@@ -428,9 +452,9 @@ def serve_videos_stats(youtube_, vid_ids_: list, person_extractor=None):
     print()
 
 
-def serve_playlist_stats(youtube_, pl_id_: str, person_extractor=None):
+def serve_playlist_stats(youtube_, pl_id_: str, person_extractor=None, max_results=100):
     try:
-        playlist_data = PlaylistFetcher(youtube_.api).fetch(pl_id_)
+        playlist_data = PlaylistFetcher(youtube_.api).fetch(pl_id_, max_results)
     except googleapiclient.errors.HttpError as e:
         if e.resp.status == 404:
             print(f"Error: Playlist '{pl_id_}' not found.")
@@ -449,9 +473,9 @@ def serve_playlist_stats(youtube_, pl_id_: str, person_extractor=None):
     print()
 
 
-def serve_channel_stats(youtube_, ch_id_: str):
+def serve_channel_stats(youtube_, ch_id_: str, max_results=100):
     try:
-        channel_data = ChannelFetcher(youtube_.api).fetch(ch_id_)
+        channel_data = ChannelFetcher(youtube_.api).fetch(ch_id_, max_results)
     except googleapiclient.errors.HttpError as e:
         if e.resp.status == 404:
             print(f"Error: Channel '{ch_id_}' not found.")
@@ -486,6 +510,11 @@ if __name__ == '__main__':
                         action='append',
                         metavar='CHANNEL_ID',
                         help='add a channel id')
+    parser.add_argument('-n', '--max-results',
+                        type=int,
+                        default=100,
+                        metavar='N',
+                        help='max number of items to fetch per resource (default: 100)')
 
     args = parser.parse_args()
 
@@ -511,10 +540,12 @@ if __name__ == '__main__':
     if arg_videos:
         serve_videos_stats(youtube, arg_videos, person_extractor)
 
+    max_results = args.max_results
+
     if arg_playlists:
         for pl_id in arg_playlists:
-            serve_playlist_stats(youtube, pl_id, person_extractor)
+            serve_playlist_stats(youtube, pl_id, person_extractor, max_results)
 
     if arg_channels:
         for ch_id in arg_channels:
-            serve_channel_stats(youtube, ch_id)
+            serve_channel_stats(youtube, ch_id, max_results)
