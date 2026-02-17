@@ -16,6 +16,7 @@ python vinturae.py -v VIDEO_ID              # single video
 python vinturae.py -v ID1 -v ID2            # multiple videos
 python vinturae.py -p PLAYLIST_ID           # playlist with its videos
 python vinturae.py -c CHANNEL_ID            # channel info
+python vinturae.py -c @handle               # channel by @handle
 python vinturae.py -v ID -p ID -c ID        # combine freely
 python vinturae.py -p PLAYLIST_ID -n 200    # fetch up to 200 items
 ```
@@ -28,9 +29,9 @@ All code lives in `vinturae.py` (~550 lines). The structure follows a pattern of
 
 - **YouTube** — Lazy-initialized API client wrapper
 - **Video / VideoStats / VideoDataFetcher / VideoStatsFormatter** — Fetch video data, compute per-day metrics and engagement ratios, format as aligned table
-- **PersonExtractor** — Sends video descriptions to an LLM via OpenRouter to extract person names (opt-in, requires `VINTURAE_OPENROUTER_API_KEY`)
+- **PersonExtractor** — Sends video descriptions to an LLM via OpenRouter to extract person names (opt-in, requires `VINTURAE_OPENROUTER_API_KEY`); shows in-place `<N/total>` progress counter
 - **Playlist / PlaylistFetcher** — Fetch playlist metadata + video IDs (paginated, configurable via `-n`, default 100)
-- **Channel / ChannelFetcher** — Fetch channel stats, uploads playlist, and related playlists (paginated, configurable via `-n`, default 100)
+- **Channel / ChannelFetcher** — Fetch channel stats, uploads playlist, and related playlists (paginated, configurable via `-n`, default 100); supports `@handle` resolution via `forHandle` API parameter
 
 Entry point: `if __name__ == '__main__'` block uses argparse, then calls `serve_videos_stats()`, `serve_playlist_stats()`, or `serve_channel_stats()` based on flags.
 
