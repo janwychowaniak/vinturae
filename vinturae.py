@@ -409,11 +409,25 @@ class ChannelFetcher:
     def __init__(self, yt_api) -> None:
         self.yt_api = yt_api
 
+    def resolve_handle(self, handle: str) -> str:
+        """Resolve a @handle to a channel ID via channels.list(forHandle=...)."""
+        response = self.yt_api.channels().list(
+            part="id",
+            forHandle=handle
+        ).execute()
+        items = response.get('items', [])
+        if not items:
+            raise ValueError(f"No channel found for handle '{handle}'")
+        return items[0]['id']
+
     def fetch(self, channel_id: str, max_results: int = 100) -> tuple[dict, dict]:
         """
-        :param channel_id: this is required (and assumed) to always be a single channel ID
+        :param channel_id: channel ID or @handle
         :param max_results: max number of playlists to fetch (default 100)
         """
+        if channel_id.startswith('@'):
+            channel_id = self.resolve_handle(channel_id)
+
         # base data
         # [https://developers.google.com/youtube/v3/docs/channels/list]
         chbdata_request = self.yt_api.channels().list(
