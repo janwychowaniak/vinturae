@@ -216,8 +216,11 @@ class PersonExtractor:
             return ''
 
     def extract_for_videos(self, videos: list[Video]) -> None:
-        for video in videos:
+        total = len(videos)
+        for i, video in enumerate(videos, 1):
+            print(f'    <{i}/{total}>', end='\r', flush=True)
             video.people = self.extract(video.description)
+        print(' ' * 20, end='\r', flush=True)
 
 
 class VideoStatsFormatter:
