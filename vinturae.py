@@ -482,7 +482,7 @@ def serve_playlist_stats(youtube_: YouTube, pl_id_: str, person_extractor: Perso
     video_data = VideoDataFetcher(youtube_.api).fetch(playlist_.videos)
 
     print(playlist_)
-    print(f'{os.linesep}  Videos:')
+    print(f'{os.linesep}  Videos: <{len(video_data["items"])}>')
     videos = [Video(videodata_item) for videodata_item in video_data['items']]
     if person_extractor:
         person_extractor.extract_for_videos(videos)
