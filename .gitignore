@@ -234,3 +234,6 @@ env.bak/
 
 # OpenCode - session data and local files
 .opencode/
+
+# Gemini CLI - session data, cache, and local settings
+.gemini/
