@@ -5,7 +5,7 @@ A command-line tool to fetch and display statistics for YouTube videos, playlist
 ## Features
 
 - Retrieve detailed statistics for individual videos, including views, likes, comments, publication date, language, and duration.
-- Analyze entire playlists, showing aggregated video data.
+- Analyze entire playlists, showing aggregated video data (paginated, configurable limit).
 - Get channel overviews with subscriber counts, video counts, and related playlists.
 - Handles optional fields gracefully (e.g., missing statistics or language info).
 - Formatted output for easy reading.
@@ -51,6 +51,7 @@ Run the script with command-line arguments to specify videos, playlists, or chan
 - `-v VIDEO_ID`: Add one or more video IDs (can be repeated).
 - `-p PLAYLIST_ID`: Add one or more playlist IDs (can be repeated).
 - `-c CHANNEL_ID`: Add one or more channel IDs (can be repeated).
+- `-n N`, `--max-results N`: Max number of items to fetch per playlist/channel (default: 100).
 
 At least one of `-v`, `-p`, or `-c` must be provided.
 

@@ -17,19 +17,20 @@ python vinturae.py -v ID1 -v ID2            # multiple videos
 python vinturae.py -p PLAYLIST_ID           # playlist with its videos
 python vinturae.py -c CHANNEL_ID            # channel info
 python vinturae.py -v ID -p ID -c ID        # combine freely
+python vinturae.py -p PLAYLIST_ID -n 200    # fetch up to 200 items
 ```
 
 No test suite or linter is configured.
 
 ## Architecture
 
-All code lives in `vinturae.py` (~520 lines). The structure follows a pattern of paired Fetcher + Domain classes per YouTube resource type:
+All code lives in `vinturae.py` (~550 lines). The structure follows a pattern of paired Fetcher + Domain classes per YouTube resource type:
 
 - **YouTube** — Lazy-initialized API client wrapper
 - **Video / VideoStats / VideoDataFetcher / VideoStatsFormatter** — Fetch video data, compute per-day metrics and engagement ratios, format as aligned table
 - **PersonExtractor** — Sends video descriptions to an LLM via OpenRouter to extract person names (opt-in, requires `VINTURAE_OPENROUTER_API_KEY`)
-- **Playlist / PlaylistFetcher** — Fetch playlist metadata + video IDs (pagination capped at 50)
-- **Channel / ChannelFetcher** — Fetch channel stats, uploads playlist, and related playlists
+- **Playlist / PlaylistFetcher** — Fetch playlist metadata + video IDs (paginated, configurable via `-n`, default 100)
+- **Channel / ChannelFetcher** — Fetch channel stats, uploads playlist, and related playlists (paginated, configurable via `-n`, default 100)
 
 Entry point: `if __name__ == '__main__'` block uses argparse, then calls `serve_videos_stats()`, `serve_playlist_stats()`, or `serve_channel_stats()` based on flags.
 
