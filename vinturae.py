@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 class YouTube:
 
-    def __init__(self, developer_key):
+    def __init__(self, developer_key: str) -> None:
         self.developer_key = developer_key
         self._api = None
 
@@ -32,7 +32,7 @@ class VideoStats:
     def __init__(self, published_at: str,
                        comments: str,
                        likes: str,
-                       views: str):
+                       views: str) -> None:
 
         self.published_at = published_at
         self.comments = int(comments) if comments else None
@@ -51,7 +51,7 @@ class VideoStats:
         self._viewstocomments_ratio = None
 
     @property
-    def age_days(self):
+    def age_days(self) -> int | None:
         if not self._age_days:
             pa_dt = datetime.fromisoformat(self.published_at.replace('Z', '+00:00'))
             ago_td = datetime.now(timezone.utc) - pa_dt
@@ -60,7 +60,7 @@ class VideoStats:
 
     #
     @property
-    def views_per_day(self):
+    def views_per_day(self) -> int | None:
         if not self._views_per_day:
             if self.views is None:
                 self._views_per_day = None
@@ -69,7 +69,7 @@ class VideoStats:
         return self._views_per_day
 
     @property
-    def likes_per_day(self):
+    def likes_per_day(self) -> int | None:
         if not self._likes_per_day:
             if self.likes is None:
                 self._likes_per_day = None
@@ -78,7 +78,7 @@ class VideoStats:
         return self._likes_per_day
 
     @property
-    def comments_per_day(self):
+    def comments_per_day(self) -> int | None:
         if not self._comments_per_day:
             if self.comments is None:
                 self._comments_per_day = None
@@ -88,7 +88,7 @@ class VideoStats:
 
     #
     @property
-    def likestoviews_ratio(self):
+    def likestoviews_ratio(self) -> float | None:
         if not self._likestoviews_ratio:
             if self.likes is None or self.views is None or self.views == 0:
                 self._likestoviews_ratio = None
@@ -97,7 +97,7 @@ class VideoStats:
         return self._likestoviews_ratio
 
     @property
-    def commentstoviews_ratio(self):
+    def commentstoviews_ratio(self) -> float | None:
         if not self._commentstoviews_ratio:
             if self.comments is None or self.views is None or self.views == 0:
                 self._commentstoviews_ratio = None
@@ -106,7 +106,7 @@ class VideoStats:
         return self._commentstoviews_ratio
 
     @property
-    def viewstolikes_ratio(self):
+    def viewstolikes_ratio(self) -> float | None:
         if not self._viewstolikes_ratio:
             ratio = self.likestoviews_ratio
             if ratio is None or ratio == 0:
@@ -116,7 +116,7 @@ class VideoStats:
         return self._viewstolikes_ratio
 
     @property
-    def viewstocomments_ratio(self):
+    def viewstocomments_ratio(self) -> float | None:
         if not self._viewstocomments_ratio:
             ratio = self.commentstoviews_ratio
             if ratio is None or ratio == 0:
@@ -129,7 +129,7 @@ class VideoStats:
 
 class Video:
 
-    def __init__(self, viddata_item: dict):
+    def __init__(self, viddata_item: dict) -> None:
         self.id = viddata_item['id']
         self.title = viddata_item['snippet']['title']
         self.description = viddata_item['snippet'].get('description', '')
@@ -146,7 +146,7 @@ class Video:
                                 views=viddata_item['statistics'].get('viewCount', None))
 
     @property
-    def formatted_duration(self):
+    def formatted_duration(self) -> str:
         if not self.duration:
             return ""
         match = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', self.duration)
@@ -165,11 +165,11 @@ class Video:
 
 class VideoDataFetcher:
 
-    def __init__(self, yt_api, part="contentDetails,snippet,statistics"):
+    def __init__(self, yt_api, part: str = "contentDetails,snippet,statistics") -> None:
         self.yt_api = yt_api
         self._part = part
 
-    def fetch(self, video_ids: list):
+    def fetch(self, video_ids: list[str]) -> dict:
         # [https://developers.google.com/youtube/v3/docs/videos/list]
         # maxResults is not supported with the `id` param, so batch into chunks of 50
         all_items = []
@@ -194,11 +194,11 @@ class PersonExtractor:
         "Do not add any explanation or commentary."
     )
 
-    def __init__(self, api_key, model='anthropic/claude-sonnet-4'):
+    def __init__(self, api_key: str, model: str = 'anthropic/claude-sonnet-4') -> None:
         self._client = OpenRouter(api_key=api_key)
         self._model = model
 
-    def extract(self, description):
+    def extract(self, description: str) -> str:
         if not description.strip():
             return ''
         try:
@@ -215,7 +215,7 @@ class PersonExtractor:
             print(f"  [PersonExtractor warning: {e}]")
             return ''
 
-    def extract_for_videos(self, videos):
+    def extract_for_videos(self, videos: list[Video]) -> None:
         for video in videos:
             video.people = self.extract(video.description)
 
@@ -238,11 +238,11 @@ class VideoStatsFormatter:
                     '[TITLE]')
     _row_template_ = '    {}  -  {}  {}  {}  {}  |  {}   {}   {}  |  {}   {}   {}  |  {}   {}  ->  {}'
 
-    def __init__(self, videos: list):
+    def __init__(self, videos: list[Video]) -> None:
         self.videos = videos
         self.col_lens = [len(c) for c in type(self)._col_labels_]
 
-    def print(self):
+    def print(self) -> None:
         print(type(self)._row_template_.format(*type(self)._col_labels_))
         for video in self.videos:
             row_items = [video.id.rjust(self.col_lens[0]),
@@ -266,7 +266,7 @@ class VideoStatsFormatter:
 
 class Playlist:
 
-    def __init__(self, pldata_elem, plcontent_elem):
+    def __init__(self, pldata_elem: dict, plcontent_elem: dict) -> None:
         self.plcontent_elem = plcontent_elem
 
         self.id = pldata_elem['id']
@@ -279,13 +279,13 @@ class Playlist:
         self._videos = []
 
     @property
-    def videos(self):
+    def videos(self) -> list[str]:
         if not self._videos:
             for content_item in self.plcontent_elem['items']:
                 self._videos.append(content_item['contentDetails']['videoId'])
         return self._videos
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (f'  PLAYLIST: {self.id}  ->  "{self.title}"{os.linesep}'
                 f'  [channel: {self.channelId} / "{self.channelTitle}"]')
 
@@ -295,10 +295,10 @@ class PlaylistFetcher:
     _part_data_ = "snippet,status"
     _part_content_ = "contentDetails,status"
 
-    def __init__(self, yt_api):
+    def __init__(self, yt_api) -> None:
         self.yt_api = yt_api
 
-    def fetch(self, playlist_id: str, max_results=100):
+    def fetch(self, playlist_id: str, max_results: int = 100) -> tuple[dict, dict]:
         """
         :param playlist_id: this is required (and assumed) to always be a single playlist ID
         :param max_results: max number of playlist items to fetch (default 100)
@@ -337,7 +337,7 @@ class PlaylistFetcher:
 
 class Channel:
 
-    def __init__(self, chdata_elem, chcontent_elem):
+    def __init__(self, chdata_elem: dict, chcontent_elem: dict) -> None:
         self.chcontent_elem = chcontent_elem
 
         self.id = chdata_elem['id']
@@ -357,7 +357,7 @@ class Channel:
         self._playlists = []
 
     @property
-    def age_days(self):
+    def age_days(self) -> int:
         if not self._age_days:
             pa_dt = datetime.fromisoformat(self.published_at.replace('Z', '+00:00'))
             ago_td = datetime.now(timezone.utc) - pa_dt
@@ -365,19 +365,19 @@ class Channel:
         return self._age_days
 
     @property
-    def subs_per_day(self):
+    def subs_per_day(self) -> int:
         if not self._subs_per_day:
             self._subs_per_day = round(self.subscriber_count / self.age_days)
         return self._subs_per_day
 
     @property
-    def videos_per_month(self):
+    def videos_per_month(self) -> int:
         if not self._videos_per_month:
             self._videos_per_month = round(self.video_count / (self.age_days / 30))
         return self._videos_per_month
 
     @property
-    def playlists(self):
+    def playlists(self) -> list[tuple[str, str, str]]:
         if not self._playlists:
             for content_item in self.chcontent_elem['items']:
                 self._playlists.append((content_item['id'],
@@ -385,7 +385,7 @@ class Channel:
                                         content_item['snippet']['title']))
         return self._playlists
 
-    def __str__(self):
+    def __str__(self) -> str:
         head = (f'  CHANNEL: /{self.country.lower()}/ {self.id}  ->  "{self.title}"{os.linesep}'
                 f'   since : {self.published_at.split("T")[0]} ({self.age_days} days ago){os.linesep}'
                 f'   vids  : {str(self.video_count).ljust(10)} ({self.videos_per_month}/month){os.linesep}'
@@ -403,10 +403,10 @@ class ChannelFetcher:
     _part_data_ = "brandingSettings,contentDetails,snippet,status,statistics"
     _part_content_ = "snippet,status"
 
-    def __init__(self, yt_api):
+    def __init__(self, yt_api) -> None:
         self.yt_api = yt_api
 
-    def fetch(self, channel_id: str, max_results=100):
+    def fetch(self, channel_id: str, max_results: int = 100) -> tuple[dict, dict]:
         """
         :param channel_id: this is required (and assumed) to always be a single channel ID
         :param max_results: max number of playlists to fetch (default 100)
@@ -443,7 +443,7 @@ class ChannelFetcher:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def serve_videos_stats(youtube_, vid_ids_: list, person_extractor=None):
+def serve_videos_stats(youtube_: YouTube, vid_ids_: list[str], person_extractor: PersonExtractor | None = None) -> None:
     video_data = VideoDataFetcher(youtube_.api).fetch(vid_ids_)
     videos = [Video(videodata_item) for videodata_item in video_data['items']]
     if person_extractor:
@@ -452,7 +452,7 @@ def serve_videos_stats(youtube_, vid_ids_: list, person_extractor=None):
     print()
 
 
-def serve_playlist_stats(youtube_, pl_id_: str, person_extractor=None, max_results=100):
+def serve_playlist_stats(youtube_: YouTube, pl_id_: str, person_extractor: PersonExtractor | None = None, max_results: int = 100) -> None:
     try:
         playlist_data = PlaylistFetcher(youtube_.api).fetch(pl_id_, max_results)
     except googleapiclient.errors.HttpError as e:
@@ -473,7 +473,7 @@ def serve_playlist_stats(youtube_, pl_id_: str, person_extractor=None, max_resul
     print()
 
 
-def serve_channel_stats(youtube_, ch_id_: str, max_results=100):
+def serve_channel_stats(youtube_: YouTube, ch_id_: str, max_results: int = 100) -> None:
     try:
         channel_data = ChannelFetcher(youtube_.api).fetch(ch_id_, max_results)
     except googleapiclient.errors.HttpError as e:
