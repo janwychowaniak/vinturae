@@ -43,4 +43,5 @@ Data flow: CLI args → Fetcher (API call) → Domain object (parsed data + comp
 - ISO 8601 durations are parsed with regex in `Video.formatted_duration`
 - API key loaded via `python-dotenv` from `.env` file (variable: `VINTURAE_YOUTUBE_API_KEY`)
 - Optional OpenRouter integration: `VINTURAE_OPENROUTER_API_KEY` enables person name extraction from descriptions; `VINTURAE_OPENROUTER_MODEL` overrides the default model (`anthropic/claude-sonnet-4`)
+- Type hints on all function/method signatures using Python 3.12 syntax (`X | None`, `list[str]`, `tuple[...]`); `yt_api` params left untyped (dynamic google API client)
 - Dependencies: `google-api-python-client`, `python-dotenv`, `openrouter`
