@@ -50,7 +50,7 @@ Run the script with command-line arguments to specify videos, playlists, or chan
 
 - `-v VIDEO_ID`: Add one or more video IDs (can be repeated).
 - `-p PLAYLIST_ID`: Add one or more playlist IDs (can be repeated).
-- `-c CHANNEL_ID`: Add one or more channel IDs (can be repeated).
+- `-c CHANNEL_ID`: Add one or more channel IDs or `@handle`s (can be repeated).
 - `-n N`, `--max-results N`: Max number of items to fetch per playlist/channel (default: 100).
 
 At least one of `-v`, `-p`, or `-c` must be provided.
@@ -65,7 +65,7 @@ With that you can:
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.12+
 - YouTube Data API v3 key
 - Internet connection for API calls
 
