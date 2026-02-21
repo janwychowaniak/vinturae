@@ -9,16 +9,19 @@ Vinturae is a CLI tool that fetches and displays YouTube video, playlist, and ch
 ## Running
 
 ```bash
-# Requires VINTURAE_YOUTUBE_API_KEY in .env or environment
-pip install -r requirements.txt
+# Requires VINTURAE_YOUTUBE_API_KEY in .env (next to the script) or environment
 
-python vinturae.py -v VIDEO_ID              # single video
-python vinturae.py -v ID1 -v ID2            # multiple videos
-python vinturae.py -p PLAYLIST_ID           # playlist with its videos
-python vinturae.py -c CHANNEL_ID            # channel info
-python vinturae.py -c @handle               # channel by @handle
-python vinturae.py -v ID -p ID -c ID        # combine freely
-python vinturae.py -p PLAYLIST_ID -n 200    # fetch up to 200 items
+# With uv (no install step needed — dependencies declared inline via PEP 723):
+./vinturae.py -v VIDEO_ID              # single video
+./vinturae.py -v ID1 -v ID2            # multiple videos
+./vinturae.py -p PLAYLIST_ID           # playlist with its videos
+./vinturae.py -c CHANNEL_ID            # channel info
+./vinturae.py -c @handle               # channel by @handle
+./vinturae.py -v ID -p ID -c ID        # combine freely
+./vinturae.py -p PLAYLIST_ID -n 200    # fetch up to 200 items
+
+# Or with plain Python (after pip install -r requirements.txt):
+python vinturae.py -v VIDEO_ID
 ```
 
 No test suite or linter is configured.
@@ -42,7 +45,8 @@ Data flow: CLI args → Fetcher (API call) → Domain object (parsed data + comp
 - Domain classes use lazy-computed `@property` fields for derived metrics (age_days, per-day rates, ratios)
 - Optional API fields (commentCount, likeCount, language) are handled with `None` propagation throughout
 - ISO 8601 durations are parsed with regex in `Video.formatted_duration`
-- API key loaded via `python-dotenv` from `.env` file (variable: `VINTURAE_YOUTUBE_API_KEY`)
+- API key loaded via `python-dotenv` from `.env` in the script's own directory (not CWD), so the script can be invoked from anywhere (variable: `VINTURAE_YOUTUBE_API_KEY`)
 - Optional OpenRouter integration: `VINTURAE_OPENROUTER_API_KEY` enables person name extraction from descriptions; `VINTURAE_OPENROUTER_MODEL` overrides the default model (`anthropic/claude-sonnet-4`)
 - Type hints on all function/method signatures using Python 3.12 syntax (`X | None`, `list[str]`, `tuple[...]`); `yt_api` params left untyped (dynamic google API client)
-- Dependencies: `google-api-python-client`, `python-dotenv`, `openrouter`
+- Dependencies declared inline via PEP 723 script metadata (for `uv run`) and also in `requirements.txt`; packages: `google-api-python-client`, `python-dotenv`, `openrouter`
+- Requires Python 3.11+

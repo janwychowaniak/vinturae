@@ -1,7 +1,19 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "google-api-python-client>=2.190.0",
+#     "openrouter>=0.6.0",
+#     "python-dotenv>=1.2.1",
+# ]
+# ///
+
+
 import os
 import argparse
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 
 import googleapiclient.discovery
 import googleapiclient.errors
@@ -543,7 +555,10 @@ if __name__ == '__main__':
         parser.error('No resource requested, add -v or -p or -c (or -h for more info).')
     # ----------------------------------------------------------------------------------
 
-    load_dotenv()
+    # Ładuj .env z katalogu, w którym fizycznie leży skrypt (nie CWD)
+    script_dir = Path(__file__).resolve().parent
+    load_dotenv(script_dir / ".env")
+
     api_key = os.getenv('VINTURAE_YOUTUBE_API_KEY')
     if not api_key:
         raise ValueError("VINTURAE_YOUTUBE_API_KEY not found in .env file or environment variables. Please set it.")

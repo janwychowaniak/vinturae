@@ -20,21 +20,26 @@ A command-line tool to fetch and display statistics for YouTube videos, playlist
    ```
 
 2. Install dependencies:
+
+   **With [uv](https://docs.astral.sh/uv/) (recommended):** No install step needed. Dependencies are declared inline (PEP 723) and resolved automatically on first run.
+
+   **With pip:**
    ```
    pip install -r requirements.txt
    ```
 
 3. Obtain a YouTube Data API v3 key from the [Google Cloud Console](https://console.cloud.google.com/).
 
-4. Set the API key:
-   - Create a `.env` file in the project root with:
-     ```
-     VINTURAE_YOUTUBE_API_KEY=your_api_key_here
-     ```
-   - Alternatively, set it as an environment variable:
-     ```
-     export VINTURAE_YOUTUBE_API_KEY=your_api_key_here
-     ```
+4. Set the API key by creating a `.env` file in the project root (next to `vinturae.py`):
+   ```
+   VINTURAE_YOUTUBE_API_KEY=your_api_key_here
+   ```
+   The `.env` file is always loaded from the script's own directory, so you can invoke the script from any working directory.
+
+   Alternatively, set it as an environment variable:
+   ```
+   export VINTURAE_YOUTUBE_API_KEY=your_api_key_here
+   ```
 
 5. (Optional) To enable person name extraction from video descriptions, add an [OpenRouter](https://openrouter.ai/) API key:
    ```
@@ -65,7 +70,8 @@ With that you can:
 
 ## Requirements
 
-- Python 3.12+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip with `requirements.txt`
 - YouTube Data API v3 key
 - Internet connection for API calls
 
